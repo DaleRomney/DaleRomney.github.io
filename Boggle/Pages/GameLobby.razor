@@ -1,0 +1,126 @@
+﻿@page "/GameLobby"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager navman
+@inject User usr
+@inject Board b
+@inject IJSRuntime js
+@inject IDbContextFactory<sliceofbreadContext> dbFactory
+
+<h3>GameLobby</h3>
+<h1>  @passcode</h1>
+<button @onclick="click" class="btn btn-primary @disabled"> StartGame</button>
+<br />
+<br />
+<h2 class="@winnerdisabled">@wonstatus</h2>
+<h2 class="@winnerdisabled">Winner is: @winner</h2>
+
+<table class="table @winnerdisabled">
+    <thead>
+        <tr>
+            <th scope="col">Words:</th>
+        </tr>
+    </thead>
+    <tbody>
+
+@if( usr.GuessedWords.Count > 0) {
+    foreach(var item in usr.GuessedWords) {
+                <tr>
+                    <td>@item</td>
+                </tr>
+    }
+}
+    </tbody>
+</table>
+
+
+
+
+@code {
+
+    public sliceofbreadContext? Context;
+    public string disabled = "disabled";
+    string passcode = "";
+    HubConnection? hub;
+    string winner = "";
+    string winnerdisabled = "invisible";
+    string wonstatus = "";
+    List<List<char>> board = new List<List<char>>();
+
+
+    protected override async Task OnInitializedAsync() {
+
+        passcode = usr.password;
+
+        b = new Board();
+        board = b.BoggleBoard;
+        usr.board = board;
+        if (usr.IsGameFinished)
+        {
+            winner = await Task.Run(() => usr.hub.InvokeAsync<string>("FindWinner", usr.password));
+            winnerdisabled = "visible";
+            if (usr.Name != winner) {
+                wonstatus = "You Lost!";
+            }
+            else {
+                wonstatus = "You Won!";
+            }
+        }
+        else
+        {
+            if (await Task.Run(() => usr.hub.InvokeAsync<bool>("IsReady", usr.password)))
+            {
+                disabled = "";
+            }
+            else
+            {
+                wait();
+            }
+        }
+        
+
+        await base.OnInitializedAsync();
+    }
+
+    public async void wait()
+    {
+        Thread.Sleep(5000);
+        if(await Task.Run(() => usr.hub.InvokeAsync<bool>("IsReady", usr.password)))
+        {
+            disabled = "";
+            StateHasChanged();
+        }
+        else
+        {
+            wait();
+            StateHasChanged();
+        }
+    }
+    
+
+    public async void click()
+    {
+        await Task.Run(() => usr.hub.InvokeAsync("ImReady", usr.Name));
+        string jscall = $"console.log";
+        await js.InvokeVoidAsync(jscall, usr.Name);
+        Ready();
+
+    }
+
+    public async void Ready()
+    {
+        bool test = await Task.Run(() => usr.hub.InvokeAsync<bool>("ready", usr.password, usr.Name));
+        if (test)
+        {
+            navman.NavigateTo("/Game");
+        }
+        else
+        {
+            Thread.Sleep(2000);
+            Ready();
+        }
+    }
+
+
+
+    
+}

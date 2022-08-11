@@ -1,0 +1,296 @@
+﻿@page "/Game"
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Threading
+@using System.Timers
+@inject NavigationManager navman
+@inject IJSRuntime js
+@inject User usr
+@inject Board b
+@implements IDisposable
+@inject IDbContextFactory<sliceofbreadContext> dbFactory
+
+    <section id="game">
+        <header>
+            <h3>Boggle</h3>
+        </header>      
+        <div class="board">
+        <section id="dice-grid">
+            <div class="dice">
+                @if(dict.Count > 15){
+                    Count = 0;
+                }
+                @foreach (var row in b.BoggleBoard)
+                {
+                    @foreach (var item in row)
+                    {
+                        //callback event: "btnClick(item)"
+                        //void: "() => btnClick(item)"
+                            string id = item + Count++.ToString();
+                            if (!dict.Keys.Contains(id))
+                            {
+                                if(dict.Count < 16) {
+                                    dict.Add(id, false);
+                                }
+
+                            }
+                            <button @onclick="() => btnClick(id)" id="@id" class="letter" value="@item">@item</button>
+                        
+                    }
+                }
+                
+            </div>
+        </section>
+
+        <div class="opponent_stats">
+                <div>Opponent's Username:</div>
+                <div>""</div>
+                <div>Opponent's Score:</div>
+                <div>0</div>
+                <br />
+                <div class="time">@counter</div>
+                <div class="time">60</div>
+            </div>
+        </div>
+
+        <section id="word-info">
+            <div id="word-holder">
+                <h5>Current Word:</h5>
+                <p id="current-word"></p>
+            </div>
+            <button id="submit-btn">Submit Word</button>
+        </section>
+    <div class="container">
+        <table id="score-table">
+            <tr>
+                <td>@CurrWordSelected</td>
+                <td>@CurrScore</td>
+            </tr>
+            <tr>
+                <td>Total:</td>
+            <td id="total-points">@score</td>
+            </tr>
+        </table>
+    </div>
+    </section>
+    
+@code {
+    int score = 0;
+    int CurrScore = 0;
+    public static System.Timers.Timer aTimer;
+    public int counter = 30;
+
+    public async void StartTimer()
+    {
+        aTimer.Elapsed += CountDownTimer;
+        aTimer.Enabled = true;
+    }
+
+    public async void CountDownTimer(Object source, ElapsedEventArgs e)
+    {
+        if (counter > 0)
+        {
+            counter -= 1;
+        }
+        else
+        {
+            usr.IsGameFinished = true;
+            aTimer.Enabled = false;
+            await InvokeAsync(StateHasChanged);
+
+        }
+        if (counter == 0) {
+            usr.IsGameFinished = true;
+            navman.NavigateTo("/GameLobby");
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    public void Dispose()
+    {
+        Context?.Dispose();
+    }
+
+
+    public void FindWinner() 
+    {
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        dict.Clear();
+        g = new Models.Game();
+        Count = 0;
+        Busy = true;
+        try
+        {
+            Context = dbFactory.CreateDbContext();
+        }
+        finally
+        {
+            Busy = false;
+        }
+
+        await base.OnInitializedAsync();
+        DateTime t = DateTime.Now;
+        aTimer = new System.Timers.Timer(1000);
+        StartTimer();
+
+    }
+
+    bool Busy;
+    sliceofbreadContext? Context;
+    Models.Game? g;
+    public string CurrWordSelected = "";
+    public Dictionary<string, bool> dict = new();
+    public Dictionary<string, bool> dictCopy = new();
+
+    int Count = 0;
+
+    List<List<char>> board;
+
+    List<List<bool>> ValidPositions = new List<List<bool>>//a 2d array of booleans to keep track of valid positions
+    {
+        new List<bool> {false, false, false, false },
+        new List<bool> {false, false, false, false },
+        new List<bool> {false, false, false, false },
+        new List<bool> {false, false, false, false }
+    };
+
+    Dictionary<int, List<int>> ids = new Dictionary<int, List<int>>//a 2d array to map ID's
+    {
+        [0] = new List<int> { 0,  1,  2,  3  },
+        [1] = new List<int> { 4,  5,  6,  7  },
+        [2] = new List<int> { 8,  9,  10, 11 },
+        [3] = new List<int> { 12, 13, 14, 15 },
+    };
+
+
+
+    public async void btnClick(string a)
+    {
+        //ID is in the form: "{letter}{int}"
+        Count = 0;
+        char selected = a[0];
+        int id = int.Parse(a.Remove(0,1));
+        if (isValidSelection(id, a))
+        {
+            if (dict[a] is true)
+            {
+                if (await Task<bool>.Run(() => Models.Game.IsWord(CurrWordSelected, Context)))
+                {
+                    if(!usr.GuessedWords.Contains(CurrWordSelected))
+                    {
+                        CurrScore = Models.Game.AddScores(CurrWordSelected);
+                        usr.score += CurrScore;
+                        usr.hub.InvokeAsync("addWord", usr.Name, usr.password, CurrWordSelected);
+                        usr.GuessedWords.Add(CurrWordSelected);
+                        score += CurrScore;
+                    }
+
+                    CurrWordSelected = "";
+                    foreach (var item in dict.Keys)
+                    {
+                        if (dict[item])
+                        {
+                            dict[item] = false;
+                            await Task.Run(() => js.InvokeVoidAsync("getAll", item));
+                        }
+                    }
+                }
+                else
+                {
+                    await Task.Run(() => js.InvokeVoidAsync("alert", "Not a word!"));
+                    CurrWordSelected = "";
+                    resetValidPositions();
+                    foreach (var item in dict.Keys)
+                    {
+                        if (dict[item])
+                        {
+                            dict[item] = false;
+                            await Task.Run(() => js.InvokeVoidAsync("getAll", item));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                CurrWordSelected += selected;
+                await Task.Run(() => js.InvokeVoidAsync("getAll", a));
+                dict[a] = true;
+                GetValidSelections(id);
+            }
+        }
+        return;
+    }
+
+    public bool isValidSelection(int val, string a)
+    {
+        if(dict[a] is true)
+        {
+            return true;
+        }
+        int y = (int)(val / 4);
+        int x = ids[y].FindIndex(x => x == val);
+
+        if(CurrWordSelected.Length == 0)
+        {
+            ValidPositions[x][y] = true;
+            return true;
+        }
+
+        if(ValidPositions[x][y])
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public void GetValidSelections(int val)
+    {
+        int y = (int)(val / 4);
+        int x = ids[y].FindIndex(x => x == val);
+
+
+        List<List<int>> neighbors = new List<List<int>>
+        {
+            new List<int>{ -1,  0  },//left
+            new List<int>{  0, -1  },//up
+            new List<int>{  1,  0  },//right
+            new List<int>{  0,  1  },//down
+            new List<int>{ -1, -1  },//upper left diagonal
+            new List<int>{  1,  1  },//upper right diagonal
+            new List<int>{ -1,  1  },//lower left diagonal
+            new List<int>{  1, -1  }//lower right diagonal
+        };
+        resetValidPositions();
+
+        for (int i = 0; i < 8; i++)
+        {
+            int newx = x + neighbors[i][0];
+            int newy = y + neighbors[i][1];
+
+            if(newx >= 0 && newy >= 0 && newx <= 3 && newy <= 3)
+            {
+                ValidPositions[newx][newy] = true;
+            }
+        }
+    }
+
+    public void resetValidPositions()
+    {
+        foreach(var row in ValidPositions)
+        {
+            for(int i = 0; i < row.Count; i++)
+            {
+                if(row[i])
+                {
+                    row[i] = false;
+                }
+            }
+        }
+    }
+
+}

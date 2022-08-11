@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "secrets1": {
+      "type": "secrets"
+    },
+    "signalr1": {
+      "type": "signalr",
+      "connectionId": "Azure:SignalR:ConnectionString",
+      "dynamicId": null
+    },
+    "compute.appService1": {
+      "group": "connections",
+      "type": "compute.appService"
+    },
+    "mssql1": {
+      "type": "mssql",
+      "connectionId": "dbconn",
+      "dynamicId": null
+    }
+  }
+}

@@ -1,0 +1,96 @@
+﻿@page "/JoinGame"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager navman
+@inject IJSRuntime js
+@inject User usr
+
+<PageTitle>Join Game</PageTitle>
+
+<div class="container m-2">
+    <div class="row text-center mb-4 mt-4 mx-auto shadow-lg w-25 rounded-pill border-5 p-4">
+        <h2>Play a Game:</h2>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-4 container p-4 shadow-lg border rounded-3">
+            <h2 class="mb-4 text-center">New:</h2>
+            <br />
+            <div class="input-group flex-nowrap">
+                  <span class="input-group-text" id="addon-wrapping">User:</span>
+                  <input @bind="name" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="addon-wrapping">
+            </div>
+            <br />
+            <input @onclick="OnClickNewGame" type="button" class="btn btn-sm btn-primary mt-4 mb-2 mx-auto" value="New Game"/>
+        </div>
+        <div class="col-md-4 container p-4 shadow-lg border rounded-3">
+            <h2 class="mb-4 text-center">Join:</h2>
+            <div class="input-group flex-nowrap">
+                  <span class="input-group-text" id="addon-wrapping">User:</span>
+                  <input @bind="name" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group flex-nowrap mt-2">
+                  <span class="input-group-text" id="addon-wrapping">MeetingID:</span>
+                  <input @bind="passcode" type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="addon-wrapping">
+            </div>
+            <input type="button" @onclick="OnClickJoinGame" class="btn btn-sm btn-primary mt-4 mb-2 mx-auto" value="Join Game"/>
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+
+    string passcode = "";
+    HubConnection? hub;
+    public string name = "";
+
+
+    public async void OnClickNewGame()
+    {
+        usr.ConnectionID = hub.ConnectionId;
+        usr.Name = name;
+        usr.hub = this.hub;
+        usr.password = await Task.Run(() => usr.hub.InvokeAsync<string>("GeneratePassword"));
+        if (await Task.Run(() => usr.hub.InvokeAsync<bool>("AddUserToGroup", usr.ConnectionID, usr.Name, usr.password, false)))
+        {
+            navman.NavigateTo("/GameLobby");
+        }
+
+        //do something to raise an error here
+    }
+
+
+    public async void OnClickJoinGame()
+    {
+        usr.ConnectionID = hub.ConnectionId;
+        usr.Name = name;
+        usr.password = passcode;
+        usr.hub = this.hub;
+
+        if(await Task.Run(() => usr.hub.InvokeAsync<bool>("AddUserToGroup", usr.ConnectionID, usr.Name, passcode, true)))
+        {
+            navman.NavigateTo("/GameLobby");
+        }
+        else
+        {
+            await js.InvokeVoidAsync("alert", "Wrong Passcode!");
+        }
+    }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        hub = new HubConnectionBuilder()
+        .WithUrl(navman.ToAbsoluteUri("/BoggleHub"))
+            .WithAutomaticReconnect()
+            .Build();   
+        await Task.Run(() =>hub.StartAsync());
+
+
+        await base.OnInitializedAsync();
+    }
+    
+
+}
