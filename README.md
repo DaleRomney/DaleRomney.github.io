@@ -1,35 +1,158 @@
-## Dale Romney
-
 Hello, I am Dale Romney. I am a Software Engineer by profession and an Author/Writer by hobby.
+Here is a list of some of the projects I have worked on.
 
-### Markdown
+##Hangman (PHP)
+'''
+<?php
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+session_start();
+?>
 
-```markdown
-Syntax highlighted code block
+<!DOCTYPE html>
+<title>Hangman Game</title>
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/DaleRomney/DaleRomney.github.io/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+<html>
+<body>
+	<?php
+		
+		if(!isset($_SESSION['random'])){
+	        $_SESSION['random'] = rand(8,27);
+			//echo $_SESSION['random'];
+        }
+		
+		if(!isset($_SESSION['correctGuesses'])){
+	            $_SESSION['correctGuesses'] = 0;
+            }
+			
+		if(!isset($_SESSION['attempts'])){
+			$_SESSION['attempts'] = 0;
+		}
+		
+		if(!isset($_SESSION['guesses'])){
+			$_SESSION['guesses'] = array();
+		}
+			
+		$servername = "sql102.epizy.com";
+		$username = "epiz_31690262";
+		$password = "hhsBKJaGCBKMP";
+		$dbname = "epiz_31690262_dromney";
+		
+		$conn = new mysqli($servername, $username, $password, $dbname);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+		
+		$sql = "SELECT Word FROM words WHERE Id = " . $_SESSION['random'] . "";
+		$sqlResult = $conn->query($sql);
+		while($row = $sqlResult->fetch_assoc()){
+			$_SESSION['word'] = $row['Word'];
+		}
+		
+		//echo "" . $_SESSION['word'] . "<br>";
+		
+		
+		
+		function theGame($guess, $word){
+			
+			$length = strlen($word);
+			$isCorrect = false;
+			for($i = 0; $i < $length; $i++){
+				if($word[$i] == $guess){
+					$_SESSION['guesses'][$i] = $guess;
+					$_SESSION['correctGuesses']++;
+					echo "" . $guess . " is a correct guess.<br>";
+					echo "Correct guesses: " . $_SESSION['correctGuesses'] . "<br>";
+					foreach($_SESSION['guesses'] as $g){
+						echo $g . " ";
+					}
+					$isCorrect = true;
+				}
+			}
+			
+			if($_SESSION['correctGuesses'] == $length){
+				echo "Congratulations, you guessed the word correclty " . $data . ".<br>";
+				
+				$servername = "sql102.epizy.com";
+				$username = "epiz_31690262";
+				$password = "hhsBKJaGCBKMP";
+				$dbname = "epiz_31690262_dromney";
+				
+				$conn = new mysqli($servername, $username, $password, $dbname);
+                if ($conn->connect_error) {
+                  die("Connection failed: " . $conn->connect_error);
+                }
+  
+                $sql = "INSERT INTO hiscore (Username, Hiscore, Wordlength) VALUES('" . $_SESSION['uname'] . "', '" . $_SESSION['attempts'] . "', '" . $length . "')";
+				// $result = $conn->query($sql);
+				
+				if ($conn->query($sql) === TRUE){
+                    echo "Logged score<br>";
+                } else {
+                    echo "Failed to log score<br>";
+                }
+				
+				echo "<h1>Hi Scores, golf style!</h1>";
+				
+				$sqlScores = "SELECT * FROM hiscore WHERE Wordlength = " . $length . " ORDER BY Hiscore ASC";
+				
+				$slqResult = $conn->query($sqlScores);
+					while($row = $slqResult->fetch_assoc()){
+						echo "Username: " . $row["Username"] . "<br> Score: " . $row["Hiscore"] . "<br>";
+					}
+				
+                $conn->close();
+				
+				unset($_SESSION['random']);
+				unset($_SESSION['correctGuesses']);
+				unset($_SESSION['attempts']);
+				unset($_SESSION['word']);
+				unset($_SESSION['uname']);
+				unset($_SESSION['guesses']);
+			}
+			
+			if($isCorrect == false){	
+				echo "Incorrect Guess.<br>";
+				foreach($_SESSION['guesses'] as $g){
+					echo $g . " ";
+				}
+				$_SESSION['attempts']++;
+				if($_SESSION['attempts'] == 10){
+					echo "I'm sorry but you have hung your man.<br>";
+					echo "Your word was " . $_SESSION['word'] . "<br>";
+					unset($_SESSION['word']);
+					unset($_SESSION['random']);
+					unset($_SESSION['correctGuesses']);
+					unset($_SESSION['attempts']);
+					unset($_SESSION['uname']);
+					unset($_SESSION['guesses']);
+				}
+			}
+			
+			return $array;
+		}
+		
+		
+		if (isset($_POST['button1'])) {
+			theGame($_POST['guess'], $_SESSION['word']);
+		}
+		
+		if (isset($_POST['button2'])){
+				unset($_SESSION['random']);
+				unset($_SESSION['correctGuesses']);
+				unset($_SESSION['attempts']);
+				unset($_SESSION['word']);
+				unset($_SESSION['uname']);
+				unset($_SESSION['guesses']);
+		}
+	?>
+	
+	<form method = "post">
+		    <label for="guess"><b>Guess</b></label><br> 
+		    <input type="text" name="guess" required/><br><br>
+			
+			<input type="submit" name="button1" value="Guess"/>
+			<a href="home.php">Logout</a>
+		</form>
+</body>
+</html>
+'''
