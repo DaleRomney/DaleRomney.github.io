@@ -8,3 +8,7 @@ Here is a list of some of the projects I have worked on.
 ##Stock Investing (C#/ASP.NET 6/Razor)
 
 ##Boggle ((C#/ASP.NET 6/Blazor)
+
+##Online Store (C#/ASP.NET 6/MVC)
+
+##School Adminitration System ((C#/ASP.NET 6/MVC)
