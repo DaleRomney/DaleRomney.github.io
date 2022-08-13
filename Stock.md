@@ -68,13 +68,13 @@ money you either gained or lost.
 Here are some sample pictures of the application
 
 ### Inputing a Ticker Symbol
-![Home Page](https://github.com/DaleRomney/DaleRomney.github.io/blob/main/Porfolio/Stock_Ticker_Selected.jpg)
+![Home Page](/Porfolio/Stock_Ticker_Selected.jpg)
 
 ### Buying Stocks
-![Buying Stocks](https://github.com/DaleRomney/DaleRomney.github.io/blob/main/Porfolio/Stock_Purchase.jpg)
+![Buying Stocks](/Porfolio/Stock_Purchase.jpg)
 
 ### Selling Stocks
-![Selling Stocks](https://github.com/DaleRomney/DaleRomney.github.io/blob/main/Porfolio/Stock_Sale.jpg)
+![Selling Stocks](/Porfolio/Stock_Sale.jpg)
 
 ### Final Results
-![Final Results](https://github.com/DaleRomney/DaleRomney.github.io/blob/main/Porfolio/Stock_Final.jpg)
+![Final Results](/Porfolio/Stock_Final.jpg)
