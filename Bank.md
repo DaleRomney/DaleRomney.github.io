@@ -48,13 +48,13 @@ savings, or savings 2. You could also withdraw from those accounts and view a hi
 Here are some sample pictures of the application
 
 ### The Home Page
-![Home Page](https://github.com/DaleRomney/DaleRomney.github.io/blob/main/Porfolio/Bank_Main.jpg)
+![Home Page](/Porfolio/Bank_Main.jpg)
 
 ### Deposit Page
-![Deposit Page](https://github.com/DaleRomney/DaleRomney.github.io/blob/main/Porfolio/Bank_Deposit.jpg)
+![Deposit Page](/Porfolio/Bank_Deposit.jpg)
 
 ### Withraw Page
-![Withdraw Page](https://github.com/DaleRomney/DaleRomney.github.io/blob/main/Porfolio/Bank_Withdraw.jpg)
+![Withdraw Page](/Porfolio/Bank_Withdraw.jpg)
 
 ### History Page
-![History Page](https://github.com/DaleRomney/DaleRomney.github.io/blob/main/Porfolio/Bank_Overview.jpg)
+![History Page](/Porfolio/Bank_Overview.jpg)
