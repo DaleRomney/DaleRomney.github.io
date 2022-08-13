@@ -5,7 +5,7 @@ Here is a list of some of the projects I have worked on.
 
 
 ## Hangman (PHP)
-[Hangman Game](docs/HangmanGame.md)
+[Hangman Game](/HangmanGame.md)
 
 
 ## Banking APP (C#/ASP.NET 6/MVC)
