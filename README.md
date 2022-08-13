@@ -16,3 +16,6 @@ Here is a list of some of the projects I have worked on.
 
 ## Grid Word Finder (C#/ASP.NET 6/Blazor)
 [Grid Word Finder](/Boggle.md)
+
+# If you would like to check out my portfolio repository, below is the link.
+[Dale Romney](https://github.com/DaleRomney/DaleRomney.github.io.git)
