@@ -12,6 +12,7 @@ Here is a list of some of the projects I have worked on.
 [Tiger Banking](/Bank.md)
 
 ## Stock Investing (C#/ASP.NET 6/Razor)
+[Stock Investing Game](/Stock.md)
 
 ## Boggle ((C#/ASP.NET 6/Blazor)
 
